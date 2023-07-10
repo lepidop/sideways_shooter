@@ -1,8 +1,10 @@
 import sys
+from time import sleep
 
 import pygame
 
 from settings import Settings
+from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -19,6 +21,9 @@ class SidewaysShooter:
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
 
+        # Create an instance to store game statistics
+        self.stats = GameStats(self)
+
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
 
@@ -31,9 +36,12 @@ class SidewaysShooter:
         """Start the main loop for the game"""
         while True:
             self._check_events()
-            self.ship.update()
-            self._update_aliens()
-            self._update_bullets()
+
+            if self.stats.game_active:
+                self.ship.update()
+                self._update_aliens()
+                self._update_bullets()
+            
             self._update_screen()
 
     def _check_events(self):
@@ -41,7 +49,7 @@ class SidewaysShooter:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            elif event.type == self.CREATEALIEN:  
+            elif event.type == self.CREATEALIEN and self.stats.game_active:  
                 new_alien = Alien(self)
                 self.aliens.add(new_alien)
             elif event.type == pygame.KEYDOWN:
@@ -92,11 +100,34 @@ class SidewaysShooter:
         # Update alien position
         self.aliens.update()
 
-        # Get rid of aliens that have disappeared
+        # If an alien has reached the end of the screen,
+        # respond as if the ship were hit
         for alien in self.aliens.copy():
             if alien.rect.right < 0:
-                self.aliens.remove(alien)
+                self._ship_hit()
 
+        # Look for alien-ship collisions
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
+
+    def _ship_hit(self):
+        """Respond to the ship being hit by an alien"""
+        if self.stats.ships_left > 0:
+            # Decrement the ships left
+            self.stats.ships_left -= 1
+
+            # Get rid of any remaining aliens and bulletss
+            self.aliens.empty()
+            self.bullets.empty()
+
+            # Center the ship
+            self.ship.center_ship()
+
+            # Pause
+            sleep(0.5)
+        else:
+            self.stats.game_active = False
+    
     def _update_screen(self):
         # Update images on the screen, and flip to the new screen
         self.screen.fill(self.settings.bg_color)

@@ -21,7 +21,8 @@ class Alien(Sprite):
 
         # Start each alien near the top left of the screen.
         self.rect.midright = self.screen_rect.midright
-        self.rect.y = randint(self.rect.height, self.settings.screen_height)
+        self.rect.y = randint(0, 
+                              self.settings.screen_height - self.rect.y)
 
         # Store the alien's exact horizontal position
         self.x = float(self.rect.x)
