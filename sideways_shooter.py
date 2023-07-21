@@ -1,5 +1,6 @@
 import sys
 from time import sleep
+import json
 
 import pygame
 
@@ -36,6 +37,12 @@ class SidewaysShooter:
         self.CREATEALIEN = pygame.USEREVENT + 1
         pygame.time.set_timer(self.CREATEALIEN, self.settings.alien_spawn_rate)
 
+        # Play music and prep sound effect
+        pygame.mixer.music.load('sounds/background.wav')
+        pygame.mixer.music.play()
+
+        self.blaster_noise = pygame.mixer.Sound('sounds/attack.wav')
+    
     def run_game(self):
         """Start the main loop for the game"""
         while True:
@@ -52,7 +59,7 @@ class SidewaysShooter:
         # Respond to keypresses and mouse events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                sys.exit()
+                self._end_program()
             elif event.type == self.CREATEALIEN and self.stats.game_active:  
                 new_alien = Alien(self)
                 self.aliens.add(new_alien)
@@ -63,6 +70,12 @@ class SidewaysShooter:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 self._check_play_button(mouse_pos)
+    
+    def _end_program(self):
+        filename = 'high_score.json'
+        with open(filename, 'w') as f:
+            json.dump(self.stats.high_score, f)
+        sys.exit()
 
     def _check_play_button(self, mouse_pos):
         """Start a new game when the player clicks play"""
@@ -93,7 +106,7 @@ class SidewaysShooter:
         elif event.key == pygame.K_DOWN:
             self.ship.moving_down = True
         elif event.key == pygame.K_q:
-            sys.exit()
+            self._end_program()
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
 
@@ -108,6 +121,7 @@ class SidewaysShooter:
         if len(self.bullets) < self.settings.bullets_allowed:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
+            self.blaster_noise.play()
 
     def _update_bullets(self):
         """Update position of bullets and get rid of old bullets"""

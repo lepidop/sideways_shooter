@@ -15,7 +15,7 @@ class Scoreboard:
         self.stats = ss_game.stats
 
         # Font settings for scoring information
-        self.text_color = (30,30,30)
+        self.text_color = (250,250,250)
         self.font = pygame.font.SysFont(None, 48)
 
         self.prep_images()
@@ -69,8 +69,9 @@ class Scoreboard:
         self.ships = Group()
         for ship_number in range(self.stats.ships_left):
             ship = Ship(self.ss_game)
-            ship.rect.x = 10 + ship_number * ship.rect.width
-            ship.rect.y = 10
+            ship.rect.x = self.settings.screen_width 
+            ship.rect.x -= 10 + (ship_number + 1) * ship.rect.width
+            ship.rect.y = self.settings.screen_height - 10 - ship.rect.height
             self.ships.add(ship)
 
     def show_score(self):
